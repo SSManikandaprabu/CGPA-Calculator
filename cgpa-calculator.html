@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Gradeline: CGPA Calculator</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;800&family=Figtree:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#f2f5fb;--card:#fff;--ink:#101a3a;--mute:#5d6790;--line:#dde3f2;--brand:#2743ff;--brand-ink:#fff;
+--g-O:#0fb57e;--g-Ap:#6cc24a;--g-A:#c8c63a;--g-Bp:#ffb020;--g-B:#ff8a3d;--g-C:#ff5a4e;--g-F:#b3122e;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0b1129;--card:#141c3d;--ink:#eef1ff;--mute:#9aa4d0;--line:#26305e;--brand:#7d90ff;--brand-ink:#0b1129}}
+:root[data-theme="dark"]{--bg:#0b1129;--card:#141c3d;--ink:#eef1ff;--mute:#9aa4d0;--line:#26305e;--brand:#7d90ff;--brand-ink:#0b1129}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:400 16px/1.5 Figtree,system-ui,sans-serif}
+h1,h2,.big{font-family:"Bricolage Grotesque",Figtree,system-ui,sans-serif;margin:0}
+.wrap{max-width:1040px;margin:0 auto;padding:20px 16px 60px;display:grid;gap:20px}
+@media(min-width:860px){.wrap{grid-template-columns:340px 1fr;align-items:start}.side{position:sticky;top:16px}}
+header{grid-column:1/-1;display:flex;justify-content:space-between;align-items:center;gap:12px}
+h1{font-size:1.6rem;font-weight:800;letter-spacing:-.02em}
+.sub{color:var(--mute);font-size:.9rem}
+.card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:18px}
+.side .card+.card{margin-top:16px}
+.big{font-size:5rem;font-weight:800;line-height:1;letter-spacing:-.04em;color:var(--brand)}
+.mix{display:flex;height:16px;border-radius:8px;overflow:hidden;background:var(--line);margin:14px 0 6px}
+.mix i{display:block;transition:flex-grow .4s}
+.legend{display:flex;flex-wrap:wrap;gap:4px 10px;font-size:.78rem;color:var(--mute)}
+.legend b{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:4px}
+.stats{display:flex;gap:18px;margin-top:12px;font-size:.9rem}
+.stats strong{display:block;font-size:1.2rem}
+label{font-size:.85rem;color:var(--mute);display:block}
+input,button{font:inherit;color:inherit}
+input[type=text],input[type=number]{width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:10px;background:transparent}
+input:focus-visible,button:focus-visible{outline:3px solid var(--brand);outline-offset:1px}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:10px 0}
+.plan{font-size:.95rem;margin:0}
+.plan b{font-size:1.4rem;font-family:"Bricolage Grotesque",Figtree,sans-serif}
+.sem{margin-bottom:16px}
+.semh{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:10px}
+.semh h2{font-size:1.15rem}
+.sg{font-family:"Bricolage Grotesque",Figtree,sans-serif;font-size:1.3rem;font-weight:800;color:var(--brand)}
+.course{padding:12px 0;border-top:1px solid var(--line);display:grid;grid-template-columns:1fr 78px 32px;gap:8px;align-items:center}
+.chips{grid-column:1/-1;display:flex;gap:6px;flex-wrap:wrap}
+.chip{border:1.5px solid var(--line);background:transparent;border-radius:999px;padding:4px 12px;cursor:pointer;font-weight:600;font-size:.9rem;min-width:44px}
+.chip[aria-pressed=true]{color:#fff;border-color:transparent;background:var(--c)}
+.x{border:0;background:transparent;cursor:pointer;font-size:1.3rem;color:var(--mute);border-radius:8px}
+.btn{border:1.5px dashed var(--line);background:transparent;border-radius:10px;padding:8px 14px;cursor:pointer;color:var(--brand);font-weight:600}
+.btn.solid{background:var(--brand);color:var(--brand-ink);border:0}
+.tools{display:flex;gap:10px;flex-wrap:wrap}
+.note{font-size:.8rem;color:var(--mute);margin-top:10px}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <div><h1>Gradeline</h1><div class="sub">Tap grades, watch your CGPA move.</div></div>
+  <button class="btn" id="theme" aria-label="Toggle theme">Theme</button>
+</header>
+
+<aside class="side">
+  <div class="card">
+    <div class="sub">Your CGPA</div>
+    <div class="big" id="cgpa">0.00</div>
+    <div class="mix" id="mix" role="img" aria-label="Credits by grade"></div>
+    <div class="legend" id="legend"></div>
+    <div class="stats"><div><strong id="cr">0</strong>credits</div><div><strong id="pc">0%</strong>approx. (×10)</div><div><strong id="ns">0</strong>semesters</div></div>
+  </div>
+  <div class="card">
+    <h2 style="font-size:1.05rem">Target planner</h2>
+    <div class="row2">
+      <div><label for="tg">Target CGPA</label><input id="tg" type="number" min="0" max="10" step="0.1" value="8.5"></div>
+      <div><label for="rc">Credits left</label><input id="rc" type="number" min="1" max="200" value="20"></div>
+    </div>
+    <p class="plan" id="plan"></p>
+  </div>
+</aside>
+
+<main>
+  <div id="sems"></div>
+  <div class="tools"><button class="btn solid" id="addsem">Add semester</button><button class="btn" id="reset">Clear all</button></div>
+  <p class="note">Uses a 10-point scale: O 10, A+ 9, A 8, B+ 7, B 6, C 5, F 0. CGPA = total grade points ÷ total credits. Data stays in your browser.</p>
+</main>
+</div>
+
+<script>
+const G=[["O",10,"--g-O"],["A+",9,"--g-Ap"],["A",8,"--g-A"],["B+",7,"--g-Bp"],["B",6,"--g-B"],["C",5,"--g-C"],["F",0,"--g-F"]];
+const pts=Object.fromEntries(G.map(g=>[g[0],g[1]]));
+const mk=()=>({n:"",cr:4,g:"O"});
+const KEY="gradeline-v1";
+let S;
+try{S=JSON.parse(localStorage.getItem(KEY))}catch(e){S=null}
+if(!Array.isArray(S)||!S.length)S=[[mk(),mk(),mk()]];
+const $=id=>document.getElementById(id);
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}};
+
+function render(){
+  $("sems").innerHTML=S.map((sem,si)=>`
+  <section class="card sem">
+    <div class="semh"><h2>Semester ${si+1}</h2><div><span class="sub">SGPA </span><span class="sg" data-sg="${si}">0.00</span> ${S.length>1?`<button class="x" data-rs="${si}" aria-label="Remove semester ${si+1}">×</button>`:""}</div></div>
+    ${sem.map((c,ci)=>`
+    <div class="course">
+      <input type="text" placeholder="Course name" value="${esc(c.n)}" data-f="n" data-s="${si}" data-i="${ci}" aria-label="Course name">
+      <input type="number" min="0" max="10" step="1" value="${c.cr}" data-f="cr" data-s="${si}" data-i="${ci}" aria-label="Credits">
+      <button class="x" data-rc="${si}:${ci}" aria-label="Remove course">×</button>
+      <div class="chips" role="group" aria-label="Grade">${G.map(g=>`<button class="chip" style="--c:var(${g[2]})" aria-pressed="${c.g===g[0]}" data-g="${g[0]}" data-s="${si}" data-i="${ci}">${g[0]}</button>`).join("")}</div>
+    </div>`).join("")}
+    <button class="btn" data-ac="${si}" style="margin-top:8px">Add course</button>
+  </section>`).join("");
+  calc();
+}
+
+function calc(){
+  let tp=0,tc=0,mix={};
+  S.forEach((sem,si)=>{
+    let p=0,c=0;
+    sem.forEach(x=>{const cr=Math.max(0,+x.cr||0);p+=cr*pts[x.g];c+=cr;mix[x.g]=(mix[x.g]||0)+cr});
+    tp+=p;tc+=c;
+    const el=document.querySelector(`[data-sg="${si}"]`);if(el)el.textContent=c?(p/c).toFixed(2):"0.00";
+  });
+  const cg=tc?tp/tc:0;
+  $("cgpa").textContent=cg.toFixed(2);
+  $("cr").textContent=tc;$("pc").textContent=(cg*10).toFixed(1)+"%";$("ns").textContent=S.length;
+  $("mix").innerHTML=G.map(g=>`<i style="flex-grow:${mix[g[0]]||0};background:var(${g[2]})"></i>`).join("");
+  $("legend").innerHTML=G.filter(g=>mix[g[0]]).map(g=>`<span><b style="background:var(${g[2]})"></b>${g[0]} ${mix[g[0]]}cr</span>`).join("")||"Add courses to see your grade mix.";
+  const t=+$("tg").value,r=+$("rc").value,p=$("plan");
+  if(!r||r<=0||isNaN(t)){p.textContent="Enter credits left and a target.";}
+  else{
+    const need=(t*(tc+r)-tp)/r;
+    if(need>10)p.innerHTML=`Not reachable: you would need <b>${need.toFixed(2)}</b>, above the 10 maximum. Try a lower target or more credits.`;
+    else if(need<=0)p.innerHTML=`You already clear ${t} even with all F grades in the remaining credits.`;
+    else p.innerHTML=`Average <b>${need.toFixed(2)}</b> across your next ${r} credits to finish at ${t}.`;
+  }
+  save();
+}
+
+document.addEventListener("input",e=>{
+  const d=e.target.dataset;
+  if(d.f){S[d.s][d.i][d.f]=d.f==="cr"?e.target.value:e.target.value;calc()}
+  else if(e.target.id==="tg"||e.target.id==="rc")calc();
+});
+document.addEventListener("click",e=>{
+  const b=e.target.closest("button");if(!b)return;const d=b.dataset;
+  if(d.g){S[d.s][d.i].g=d.g;render()}
+  else if(d.ac!==undefined){S[d.ac].push(mk());render()}
+  else if(d.rc){const[s,i]=d.rc.split(":");S[s].splice(i,1);render()}
+  else if(d.rs!==undefined){S.splice(d.rs,1);render()}
+  else if(b.id==="addsem"){S.push([mk(),mk(),mk()]);render()}
+  else if(b.id==="reset"){S=[[mk(),mk(),mk()]];render()}
+  else if(b.id==="theme"){const r=document.documentElement,dark=getComputedStyle(r).getPropertyValue("--bg").trim()==="#0b1129";r.dataset.theme=dark?"light":"dark"}
+});
+render();
+</script>
+</body>
+</html>
